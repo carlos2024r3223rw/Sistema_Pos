@@ -2,73 +2,174 @@ import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, ShoppingCart, Users, Settings, Package, History, LogOut } from 'lucide-react';
 
 export const Sidebar = () => {
-  // Clase base para los links (para no repetir código)
-  const linkClass = ({ isActive }: { isActive: boolean }) => 
-    `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium ${
-      isActive 
-        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 translate-x-1' 
-        : 'text-slate-400 hover:bg-slate-800 hover:text-white hover:translate-x-1'
-    }`;
+  // Función para manejar el logout
+  const handleLogout = () => {
+    localStorage.removeItem('pos_token');
+    localStorage.removeItem('pos_user');
+    window.location.href = '/';
+  };
 
   return (
-    <aside className="w-64 bg-slate-900 text-white h-screen flex flex-col shrink-0 transition-all duration-300">
-      
-      {/* LOGO */}
-      <div className="p-6 mb-4">
-        <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 tracking-tight">
-          POS System
-        </h1>
-        <p className="text-xs text-slate-500 mt-1">Gestión de Ventas v1.0</p>
-      </div>
+    <>
+      {/* --- ESTILOS CSS MANUALES (Incluye arreglo de estructura) --- */}
+      <style>{`
+        /* 1. PARCHE PARA APP.TSX (Arregla que el Sidebar se ponga a la izquierda) */
+        .flex { display: flex; }
+        .h-screen { height: 100vh; }
+        .bg-gray-100 { background-color: #f3f4f6; }
+        .flex-1 { flex: 1; }
+        .overflow-y-auto { overflow-y: auto; }
+        .p-8 { padding: 2rem; }
 
-      {/* MENÚ DE NAVEGACIÓN */}
-      <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
+        /* 2. Estilos del Sidebar */
+        .sidebar-container {
+          width: 16rem; 
+          background-color: #0f172a; 
+          color: white;
+          height: 100vh;
+          display: flex;
+          flex-direction: column;
+          flex-shrink: 0;
+          font-family: system-ui, -apple-system, sans-serif;
+          border-right: 1px solid #1e293b;
+        }
+
+        /* Logo */
+        .logo-area { padding: 1.5rem; margin-bottom: 1rem; }
+        .logo-text {
+          font-size: 1.5rem;
+          font-weight: 700;
+          background: linear-gradient(to right, #60a5fa, #a855f7);
+          -webkit-background-clip: text;
+          color: transparent;
+          margin: 0;
+        }
+        .logo-sub { font-size: 0.75rem; color: #64748b; margin-top: 0.25rem; }
+
+        /* Navegación */
+        .nav-area {
+          flex: 1;
+          padding: 0 1rem;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
         
-        <p className="text-xs font-bold text-slate-600 px-4 mb-2 uppercase tracking-wider">Principal</p>
-        
-        <NavLink to="/dashboard" className={linkClass}>
-          <LayoutDashboard size={20} />
-          <span>Dashboard</span>
-        </NavLink>
+        .nav-section-title {
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: #475569;
+          padding: 0 1rem;
+          margin-bottom: 0.5rem;
+          margin-top: 1.5rem;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+        .nav-section-title.first { margin-top: 0; }
 
-        <NavLink to="/productos" className={linkClass}>
-          <Package size={20} />
-          <span>Productos</span>
-        </NavLink>
+        /* Links */
+        .sidebar-link {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.75rem 1rem;
+          border-radius: 0.75rem;
+          transition: all 0.2s;
+          font-weight: 500;
+          text-decoration: none;
+          color: #94a3b8;
+          cursor: pointer;
+        }
 
-        <NavLink to="/ventas" className={linkClass}>
-          <ShoppingCart size={20} />
-          <span>Ventas (POS)</span>
-        </NavLink>
+        .sidebar-link:hover {
+          background-color: #1e293b;
+          color: white;
+          transform: translateX(4px);
+        }
 
-        <p className="text-xs font-bold text-slate-600 px-4 mt-6 mb-2 uppercase tracking-wider">Administración</p>
+        .sidebar-link.active {
+          background-color: #2563eb;
+          color: white;
+          box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+          transform: translateX(4px);
+        }
 
-        <NavLink to="/clientes" className={linkClass}>
-          <Users size={20} />
-          <span>Clientes</span>
-        </NavLink>
+        /* Footer */
+        .footer-area {
+          padding: 1rem;
+          border-top: 1px solid #1e293b;
+          margin-top: auto;
+        }
+        .logout-btn {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.75rem 1rem;
+          color: #94a3b8;
+          background: transparent;
+          border: none;
+          border-radius: 0.75rem;
+          cursor: pointer;
+          transition: all 0.2s;
+          font-size: 1rem;
+        }
+        .logout-btn:hover {
+          color: #f87171;
+          background-color: rgba(30, 41, 59, 0.5);
+        }
+      `}</style>
 
-        {/* --- AQUÍ AGREGAMOS EL HISTORIAL --- */}
-        <NavLink to="/historial" className={linkClass}>
-          <History size={20} />
-          <span>Historial</span>
-        </NavLink>
-        {/* ---------------------------------- */}
+      <aside className="sidebar-container">
+        <div className="logo-area">
+          <h1 className="logo-text">POS System</h1>
+          <p className="logo-sub">Gestión de Ventas v1.0</p>
+        </div>
 
-        <NavLink to="/configuracion" className={linkClass}>
-          <Settings size={20} />
-          <span>Configuración</span>
-        </NavLink>
+        <nav className="nav-area">
+          <p className="nav-section-title first">Principal</p>
+          
+          <NavLink to="/dashboard" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            <LayoutDashboard size={20} />
+            <span>Dashboard</span>
+          </NavLink>
 
-      </nav>
+          <NavLink to="/productos" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            <Package size={20} />
+            <span>Productos</span>
+          </NavLink>
 
-      {/* FOOTER / CERRAR SESIÓN */}
-      <div className="p-4 border-t border-slate-800 mt-auto">
-        <button className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-red-400 transition-colors w-full rounded-xl hover:bg-slate-800/50">
-          <LogOut size={20} />
-          <span>Cerrar Sesión</span>
-        </button>
-      </div>
-    </aside>
+          <NavLink to="/ventas" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            <ShoppingCart size={20} />
+            <span>Ventas (POS)</span>
+          </NavLink>
+
+          <p className="nav-section-title">Administración</p>
+
+          <NavLink to="/clientes" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            <Users size={20} />
+            <span>Clientes</span>
+          </NavLink>
+
+          <NavLink to="/historial" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            <History size={20} />
+            <span>Historial</span>
+          </NavLink>
+
+          <NavLink to="/configuracion" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            <Settings size={20} />
+            <span>Configuración</span>
+          </NavLink>
+        </nav>
+
+        <div className="footer-area">
+          <button onClick={handleLogout} className="logout-btn">
+            <LogOut size={20} />
+            <span>Cerrar Sesión</span>
+          </button>
+        </div>
+      </aside>
+    </>
   );
 };

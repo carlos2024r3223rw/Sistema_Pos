@@ -1,65 +1,66 @@
 <?php
-// api/guardar_producto.php
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST");
+header("Access-Control-Allow-Methods: POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
+header("Content-Type: application/json; charset=UTF-8");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit;
 
 include_once __DIR__ . '/config/db.php';
 
-// Validar si viene ID (si viene es EDICIÓN, si no es CREACIÓN)
-$id = $_POST['id'] ?? null;
-$nombre = $_POST['nombre'] ?? '';
-$precio = $_POST['precio_venta'] ?? 0;
-$stock = $_POST['stock_actual'] ?? 0;
-$codigo = $_POST['codigo_barras'] ?? '';
+// Recogemos los datos del FormData
+$id = isset($_POST['id']) ? $_POST['id'] : null;
+$nombre = $_POST['nombre'];
+$codigo = $_POST['codigo_barras'];
+$precio = $_POST['precio_venta'];
+$stock = $_POST['stock_actual'];
 
-// Lógica de la Imagen
-$ruta_imagen = null;
+$imagen_url = null;
 
+// --- PROCESAR LA IMAGEN ---
 if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
-    $directorio = __DIR__ . "/imagenes/";
-    if (!is_dir($directorio)) mkdir($directorio, 0777, true);
+    $directorio_subida = "../uploads/productos/";
+    
+    // Crear carpeta si no existe
+    if (!file_exists($directorio_subida)) {
+        mkdir($directorio_subida, 0777, true);
+    }
 
-    $extension = pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION);
-    $nombre_archivo = uniqid() . "." . $extension;
-    $ruta_destino = $directorio . $nombre_archivo;
+    $extension = pathinfo($_FILES["imagen"]["name"], PATHINFO_EXTENSION);
+    $nombre_archivo = time() . "_" . bin2hex(random_bytes(5)) . "." . $extension;
+    $ruta_final = $directorio_subida . $nombre_archivo;
 
-    if (move_uploaded_file($_FILES['imagen']['tmp_name'], $ruta_destino)) {
-        $ruta_imagen = "api/imagenes/" . $nombre_archivo;
+    if (move_uploaded_file($_FILES["imagen"]["tmp_name"], $ruta_final)) {
+        // Guardamos la ruta relativa para que React la encuentre
+        $imagen_url = "uploads/productos/" . $nombre_archivo;
     }
 }
 
 try {
     if ($id) {
-        // --- MODO EDICIÓN (UPDATE) ---
-        $sql = "UPDATE productos SET nombre=:nom, codigo_barras=:cod, precio_venta=:pre, stock_actual=:stock";
-        if ($ruta_imagen) $sql .= ", imagen=:img"; 
-        $sql .= " WHERE id=:id";
-
-        $stmt = $conn->prepare($sql);
-        if ($ruta_imagen) $stmt->bindParam(":img", $ruta_imagen);
-        $stmt->bindParam(":id", $id);
-
+        // --- MODO EDICIÓN ---
+        // Si no se subió imagen nueva, mantenemos la anterior (o null si no existía)
+        if ($imagen_url) {
+            $sql = "UPDATE productos SET nombre=:n, codigo_barras=:c, precio_venta=:p, stock_actual=:s, imagen_url=:i WHERE id=:id";
+            $params = [':n'=>$nombre, ':c'=>$codigo, ':p'=>$precio, ':s'=>$stock, ':i'=>$imagen_url, ':id'=>$id];
+        } else {
+            $sql = "UPDATE productos SET nombre=:n, codigo_barras=:c, precio_venta=:p, stock_actual=:s WHERE id=:id";
+            $params = [':n'=>$nombre, ':c'=>$codigo, ':p'=>$precio, ':s'=>$stock, ':id'=>$id];
+        }
     } else {
-        // --- MODO CREACIÓN (INSERT) ---
-        $sql = "INSERT INTO productos (nombre, codigo_barras, precio_venta, stock_actual, imagen) VALUES (:nom, :cod, :pre, :stock, :img)";
-        $stmt = $conn->prepare($sql);
-        $stmt->bindParam(":img", $ruta_imagen);
+        // --- MODO NUEVO ---
+        $sql = "INSERT INTO productos (nombre, codigo_barras, precio_venta, stock_actual, imagen_url) 
+                VALUES (:n, :c, :p, :s, :i)";
+        $params = [':n'=>$nombre, ':c'=>$codigo, ':p'=>$precio, ':s'=>$stock, ':i'=>$imagen_url];
     }
 
-    $stmt->bindParam(":nom", $nombre);
-    $stmt->bindParam(":cod", $codigo);
-    $stmt->bindParam(":pre", $precio);
-    $stmt->bindParam(":stock", $stock);
+    $stmt = $conn->prepare($sql);
+    $stmt->execute($params);
 
-    if ($stmt->execute()) {
-        echo json_encode(["message" => "Guardado con éxito"]);
-    } else {
-        http_response_code(500);
-        echo json_encode(["error" => "Error en BD"]);
-    }
+    echo json_encode(["status" => "success", "message" => "Producto guardado correctamente"]);
 
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(["error" => $e->getMessage()]);
+    echo json_encode(["error" => "Error en la base de datos: " . $e->getMessage()]);
 }
 ?>
