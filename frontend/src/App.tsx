@@ -4,6 +4,7 @@ import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './pages/Dashboard'; 
 import { Productos } from './pages/Productos';
 import { Configuracion } from './pages/Configuracion';
+import { Historial } from './pages/Historial';
 import { Ventas } from './pages/Ventas';
 import { Clientes } from './pages/Clientes';   
 
@@ -26,6 +27,7 @@ function App() {
             <Route path="/ventas"    element={<Ventas />} />
             <Route path="/clientes"  element={<Clientes />} />
             <Route path="/configuracion" element={<Configuracion />} />
+            <Route path="/historial" element={<Historial />} />
             
           </Routes>
         </main>
