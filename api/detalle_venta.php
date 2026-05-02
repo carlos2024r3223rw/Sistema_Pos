@@ -12,8 +12,7 @@ if (!$id_venta) {
 }
 
 try {
-    // Buscamos los productos de esa venta
-    // Asumimos que tienes una tabla 'detalle_ventas' (si tu sistema guarda ventas, debe tenerla)
+
     $query = "SELECT d.cantidad, d.precio_unitario as precio_venta, p.nombre 
               FROM detalle_ventas d
               JOIN productos p ON d.id_producto = p.id

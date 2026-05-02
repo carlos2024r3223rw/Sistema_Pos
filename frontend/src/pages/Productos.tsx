@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Plus, X, Pencil, Image as ImageIcon, Upload, Search, Filter } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 interface Producto {
   id: number;
@@ -27,21 +28,30 @@ export const Productos = () => {
   const [archivoImagen, setArchivoImagen] = useState<File | null>(null);
   const [previewImagen, setPreviewImagen] = useState<string | null>(null);
 
+  // Configuración de Toasts
+  const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true,
+  });
+
   const cargarProductos = () => {
     fetch('/api/productos.php')
       .then(res => res.json())
-      .then(data => setProductos(data))
+      .then(data => setProductos(Array.isArray(data) ? data : []))
       .catch(err => console.error("Error:", err));
   };
 
   useEffect(() => {
     cargarProductos();
-    const intervalo = setInterval(cargarProductos, 5000); 
+    const intervalo = setInterval(cargarProductos, 10000); 
     return () => clearInterval(intervalo);
   }, []);
 
   const productosFiltrados = productos.filter(prod => {
-    const coincideTexto = prod.nombre.toLowerCase().includes(busqueda.toLowerCase()) || 
+    const coincideTexto = (prod.nombre || "").toLowerCase().includes(busqueda.toLowerCase()) || 
                           (prod.codigo_barras && prod.codigo_barras.includes(busqueda));
     const coincideStock = soloBajoStock ? prod.stock_actual < 5 : true;
     return coincideTexto && coincideStock;
@@ -82,10 +92,6 @@ export const Productos = () => {
   const guardarProducto = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Usamos confirmación nativa para evitar errores de compilación
-    const mensaje = editandoId ? '¿Guardar cambios?' : '¿Crear producto?';
-    if (!window.confirm(mensaje)) return;
-
     const formData = new FormData();
     if (editandoId) formData.append('id', editandoId.toString());
     formData.append('nombre', nombre);
@@ -99,102 +105,40 @@ export const Productos = () => {
       if (response.ok) {
         setMostrarModal(false);
         cargarProductos();
-        window.alert('¡Guardado exitosamente!');
+        Toast.fire({
+            icon: 'success',
+            title: editandoId ? 'Producto actualizado' : 'Producto creado'
+        });
       } else {
-        window.alert('Error al guardar el producto');
+        Swal.fire('Error', 'No se pudo guardar el producto', 'error');
       }
-    } catch (error) { console.error(error); }
+    } catch (error) { 
+        Swal.fire('Error', 'Error de conexión', 'error');
+    }
   };
 
   return (
-    <div className="page-container">
-      {/* --- ESTILOS CSS INYECTADOS --- */}
-      <style>{`
-        .page-container { padding: 1rem; font-family: system-ui, -apple-system, sans-serif; animation: fadeIn 0.5s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Encabezado */
-        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-        .page-title { font-size: 1.8rem; font-weight: 800; color: #1f2937; margin: 0; }
-        
-        /* Botones */
-        .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
-        .btn-primary { background-color: #2563eb; color: white; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3); }
-        .btn-primary:hover { background-color: #1d4ed8; transform: translateY(-1px); }
-        .btn-secondary { background-color: white; border: 1px solid #e5e7eb; color: #374151; }
-        .btn-secondary:hover { background-color: #f9fafb; }
-        .btn-secondary.active { background-color: #fecaca; color: #dc2626; border-color: #fecaca; }
-        
-        /* Barra de Filtros */
-        .filters-row { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-        .search-container { flex: 1; position: relative; }
-        .search-icon { position: absolute; left: 0.75rem; top: 0.75rem; color: #9ca3af; }
-        .search-input { width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 1px solid #d1d5db; border-radius: 0.5rem; outline: none; font-size: 0.95rem; }
-        .search-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
-
-        /* Tabla */
-        .table-container { background: white; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; overflow: hidden; }
-        .scroll-area { max-height: 70vh; overflow-y: auto; }
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        thead { background-color: #f9fafb; position: sticky; top: 0; z-index: 10; }
-        th { padding: 1rem; font-size: 0.75rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb; }
-        td { padding: 1rem; border-bottom: 1px solid #f3f4f6; color: #374151; vertical-align: middle; }
-        tr:hover { background-color: #f8fafc; }
-
-        /* Elementos de Tabla */
-        .prod-info { display: flex; align-items: center; gap: 1rem; }
-        .prod-img-box { width: 3rem; height: 3rem; border-radius: 0.5rem; background: #f3f4f6; border: 1px solid #e5e7eb; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-        .prod-img { width: 100%; height: 100%; object-fit: cover; }
-        .prod-name { font-weight: 600; color: #111827; margin: 0; }
-        .prod-code { font-size: 0.75rem; color: #9ca3af; margin: 0; }
-        .price-tag { color: #16a34a; font-weight: 700; font-size: 1rem; }
-        
-        .stock-badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; display: inline-block; }
-        .stock-ok { background-color: #dcfce7; color: #15803d; }
-        .stock-low { background-color: #fee2e2; color: #b91c1c; }
-
-        .btn-edit { background-color: #eff6ff; color: #2563eb; padding: 0.5rem; border-radius: 0.5rem; border: none; cursor: pointer; display: flex; gap: 0.25rem; align-items: center; font-size: 0.85rem; font-weight: 500; }
-        .btn-edit:hover { background-color: #dbeafe; color: #1e40af; }
-
-        /* Modal */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 50; animation: fadeIn 0.2s; }
-        .modal-content { background: white; border-radius: 1rem; width: 100%; max-width: 28rem; padding: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); position: relative; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-        .modal-title { font-size: 1.25rem; font-weight: 700; color: #1f2937; margin: 0; }
-        .close-btn { color: #9ca3af; background: none; border: none; cursor: pointer; }
-        .close-btn:hover { color: #ef4444; }
-
-        .form-group { margin-bottom: 1rem; }
-        .form-label { display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; }
-        .form-input { width: 100%; padding: 0.6rem; border: 1px solid #d1d5db; border-radius: 0.5rem; outline: none; }
-        .form-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1); }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-
-        .upload-area { display: flex; justify-content: center; margin-bottom: 1rem; }
-        .upload-circle { width: 8rem; height: 8rem; border-radius: 50%; border: 2px dashed #d1d5db; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #f9fafb; position: relative; cursor: pointer; transition: border-color 0.2s; }
-        .upload-circle:hover { border-color: #3b82f6; }
-        .upload-preview { width: 100%; height: 100%; object-fit: cover; }
-        .upload-placeholder { text-align: center; color: #9ca3af; font-size: 0.75rem; }
-        .file-input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-
-        .btn-submit { width: 100%; padding: 0.75rem; background: #2563eb; color: white; border: none; border-radius: 0.5rem; font-weight: 700; cursor: pointer; margin-top: 1rem; }
-        .btn-submit:hover { background: #1d4ed8; }
-      `}</style>
-
+    <div className="animate-fade-in p-4">
       {/* Encabezado */}
-      <div className="header-row">
-        <h1 className="page-title">Inventario ({productosFiltrados.length})</h1>
-        <button onClick={abrirCrear} className="btn btn-primary">
-          <Plus size={20} /> Nuevo Producto
+      <div className="flex justify-between items-center mb-8">
+        <div>
+            <h1 className="text-3xl font-black text-gray-800 tracking-tight">Inventario de Productos</h1>
+            <p className="text-gray-500 font-medium">Gestiona tu stock y precios ({productosFiltrados.length} items)</p>
+        </div>
+        <button 
+            onClick={abrirCrear} 
+            className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-blue-700 hover:-translate-y-1 transition-all shadow-xl shadow-blue-100 active:scale-95"
+        >
+          <Plus size={24} /> Nuevo Producto
         </button>
       </div>
 
       {/* Filtros */}
-      <div className="filters-row">
-        <div className="search-container">
-          <Search className="search-icon" size={20} />
+      <div className="flex gap-4 mb-8">
+        <div className="flex-1 relative group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={20} />
           <input 
-            className="search-input"
+            className="w-full pl-12 pr-4 py-3 bg-white border border-gray-100 rounded-2xl outline-none focus:ring-4 focus:ring-blue-50 transition-all font-medium text-gray-700 shadow-sm"
             placeholder="Buscar por nombre o código..." 
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
@@ -202,50 +146,56 @@ export const Productos = () => {
         </div>
         <button 
           onClick={() => setSoloBajoStock(!soloBajoStock)}
-          className={`btn btn-secondary ${soloBajoStock ? 'active' : ''}`}
+          className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all ${soloBajoStock ? 'bg-red-500 text-white shadow-lg shadow-red-100' : 'bg-white text-gray-500 border border-gray-100 hover:bg-gray-50'}`}
         >
-          <Filter size={18} /> {soloBajoStock ? 'Mostrando Bajo Stock' : 'Filtrar Bajo Stock'}
+          <Filter size={18} /> {soloBajoStock ? 'Bajo Stock Activo' : 'Ver Bajo Stock'}
         </button>
       </div>
 
-      {/* Tabla */}
-      <div className="table-container">
-        <div className="scroll-area">
-          <table>
+      {/* Tabla Estilizada */}
+      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
             <thead>
-              <tr>
-                <th>Producto</th>
-                <th>Precio</th>
-                <th>Stock</th>
-                <th>Acciones</th>
+              <tr className="bg-gray-50/50">
+                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Detalles del Producto</th>
+                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Precio Unitario</th>
+                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Stock Disponible</th>
+                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Acciones</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-50">
               {productosFiltrados.map((prod) => (
-                <tr key={prod.id}>
-                  <td>
-                    <div className="prod-info">
-                      <div className="prod-img-box">
+                <tr key={prod.id} className="hover:bg-blue-50/20 transition-colors group">
+                  <td className="p-5">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden flex items-center justify-center group-hover:scale-105 transition-transform">
                         {prod.imagen ? (
-                          <img src={obtenerUrlImagen(prod.imagen) || ''} alt={prod.nombre} className="prod-img" />
+                          <img src={obtenerUrlImagen(prod.imagen) || ''} alt={prod.nombre} className="w-full h-full object-contain" />
                         ) : (
-                          <ImageIcon size={24} color="#9ca3af" />
+                          <ImageIcon size={24} className="text-gray-300" />
                         )}
                       </div>
                       <div>
-                        <p className="prod-name">{prod.nombre}</p>
-                        <p className="prod-code">{prod.codigo_barras}</p>
+                        <p className="font-bold text-gray-800 text-lg leading-tight">{prod.nombre}</p>
+                        <p className="text-xs font-black text-gray-300 mt-1 uppercase tracking-tighter">REF: {prod.codigo_barras || 'S/C'}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="price-tag">${Number(prod.precio_venta).toFixed(2)}</td>
-                  <td>
-                    <span className={`stock-badge ${prod.stock_actual < 5 ? 'stock-low' : 'stock-ok'}`}>
-                      {prod.stock_actual} unid.
-                    </span>
+                  <td className="p-5">
+                      <span className="text-xl font-black text-blue-600">${Number(prod.precio_venta).toFixed(2)}</span>
                   </td>
-                  <td>
-                    <button onClick={() => abrirEditar(prod)} className="btn-edit">
+                  <td className="p-5">
+                    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full font-black text-[10px] uppercase ${prod.stock_actual < 5 ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                      <div className={`w-2 h-2 rounded-full animate-pulse ${prod.stock_actual < 5 ? 'bg-red-500' : 'bg-green-500'}`}></div>
+                      {prod.stock_actual} Unidades
+                    </div>
+                  </td>
+                  <td className="p-5">
+                    <button 
+                        onClick={() => abrirEditar(prod)} 
+                        className="flex items-center gap-2 px-4 py-2 bg-gray-50 text-gray-500 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition-all active:scale-95"
+                    >
                       <Pencil size={16} /> Editar
                     </button>
                   </td>
@@ -258,51 +208,60 @@ export const Productos = () => {
 
       {/* Modal */}
       {mostrarModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h2 className="modal-title">{editandoId ? 'Editar Producto' : 'Nuevo Producto'}</h2>
-              <button onClick={() => setMostrarModal(false)} className="close-btn"><X size={24} /></button>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="bg-blue-600 p-6 text-white flex justify-between items-center">
+                <h2 className="text-xl font-black flex items-center gap-2 uppercase tracking-tight">
+                    {editandoId ? <Pencil size={24} /> : <Plus size={24} />}
+                    {editandoId ? 'Editar Producto' : 'Nuevo Registro'}
+                </h2>
+                <button onClick={() => setMostrarModal(false)} className="hover:bg-white/20 p-2 rounded-full transition-colors">
+                    <X size={24} />
+                </button>
             </div>
             
-            <form onSubmit={guardarProducto}>
-              <div className="upload-area">
-                <div className="upload-circle">
-                  {previewImagen ? (
-                    <img src={previewImagen} className="upload-preview" />
-                  ) : (
-                    <div className="upload-placeholder">
-                      <Upload style={{margin:'0 auto 4px'}} size={24} />
-                      <span>Subir Foto</span>
-                    </div>
-                  )}
-                  <input type="file" accept="image/*" onChange={handleFileChange} className="file-input" />
+            <form onSubmit={guardarProducto} className="p-8">
+              <div className="flex justify-center mb-8">
+                <div className="relative group">
+                  <div className="w-32 h-32 rounded-3xl bg-gray-50 border-4 border-gray-50 flex items-center justify-center overflow-hidden shadow-inner group-hover:border-blue-100 transition-colors">
+                    {previewImagen ? (
+                      <img src={previewImagen} className="w-full h-full object-contain" />
+                    ) : (
+                      <div className="text-center text-gray-300">
+                        <Upload size={32} className="mx-auto mb-1" />
+                        <span className="text-[10px] font-black uppercase">Subir Foto</span>
+                      </div>
+                    )}
+                  </div>
+                  <input type="file" accept="image/*" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer" />
                 </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Nombre</label>
-                <input required className="form-input" value={nombre} onChange={e => setNombre(e.target.value)} />
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">Precio ($)</label>
-                  <input type="number" step="0.01" required className="form-input" value={precio} onChange={e => setPrecio(e.target.value)} />
+              <div className="space-y-4">
+                <div>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">Nombre del Producto</label>
+                  <input required className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-4 focus:ring-blue-50 transition-all font-bold" value={nombre} onChange={e => setNombre(e.target.value)} />
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Stock</label>
-                  <input type="number" required className="form-input" value={stock} onChange={e => setStock(e.target.value)} />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">Precio de Venta</label>
+                    <input type="number" step="0.01" required className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-4 focus:ring-blue-50 transition-all font-bold" value={precio} onChange={e => setPrecio(e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">Stock Inicial</label>
+                    <input type="number" required className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-4 focus:ring-blue-50 transition-all font-bold" value={stock} onChange={e => setStock(e.target.value)} />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">Código de Barras / SKU</label>
+                  <input className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-4 focus:ring-blue-50 transition-all font-bold" value={codigo} onChange={e => setCodigo(e.target.value)} />
                 </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Código de Barras</label>
-                <input className="form-input" value={codigo} onChange={e => setCodigo(e.target.value)} />
-              </div>
-
-              <button type="submit" className="btn-submit">
-                Guardar Cambios
+              <button type="submit" className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-lg mt-8 shadow-xl shadow-blue-100 hover:bg-blue-700 hover:-translate-y-1 transition-all active:scale-95 uppercase tracking-tight">
+                {editandoId ? 'Guardar Cambios' : 'Registrar Producto'}
               </button>
             </form>
           </div>

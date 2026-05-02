@@ -19,13 +19,14 @@ try {
     $conn->beginTransaction();
 
     // Insertamos la venta con id_usuario 1 e id_arqueo 1 que ya tienes en la DB
-    $queryVenta = "INSERT INTO ventas (id_usuario, id_cliente, id_arqueo, total, pago_con, cambio, fecha_venta) 
-                   VALUES (1, 1, 1, :total, :pago, :cambio, NOW())";
+    $queryVenta = "INSERT INTO ventas (id_usuario, id_cliente, id_arqueo, total, pago_con, cambio, metodo_pago, fecha_venta) 
+                   VALUES (1, 1, 1, :total, :pago, :cambio, :metodo_pago, NOW())";
     $stmtVenta = $conn->prepare($queryVenta);
     $stmtVenta->execute([
         ':total' => $data['total'],
         ':pago'  => $data['pago_con'],
-        ':cambio' => $data['cambio']
+        ':cambio' => $data['cambio'],
+        ':metodo_pago' => $data['metodo_pago'] ?? 'Efectivo'
     ]);
     
     $idVenta = $conn->lastInsertId();

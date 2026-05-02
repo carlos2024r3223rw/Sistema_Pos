@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Sidebar } from './components/Sidebar';
 
@@ -7,8 +8,15 @@ import { Configuracion } from './pages/Configuracion';
 import { Historial } from './pages/Historial';
 import { Ventas } from './pages/Ventas';
 import { Clientes } from './pages/Clientes';   
+import { Login } from './pages/Login';
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('pos_token'));
+
+  if (!isAuthenticated) {
+    return <Login onLogin={() => setIsAuthenticated(true)} />;
+  }
+
   return (
     <BrowserRouter>
       <div className="flex h-screen bg-gray-100">

@@ -2,6 +2,10 @@ import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, ShoppingCart, Users, Settings, Package, History, LogOut } from 'lucide-react';
 
 export const Sidebar = () => {
+  const userStr = localStorage.getItem('pos_user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  const isAdmin = user?.rol === 'Admin';
+
   // Función para manejar el logout
   const handleLogout = () => {
     localStorage.removeItem('pos_token');
@@ -130,10 +134,12 @@ export const Sidebar = () => {
         <nav className="nav-area">
           <p className="nav-section-title first">Principal</p>
           
-          <NavLink to="/dashboard" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <LayoutDashboard size={20} />
-            <span>Dashboard</span>
-          </NavLink>
+          {isAdmin && (
+            <NavLink to="/dashboard" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+              <LayoutDashboard size={20} />
+              <span>Dashboard</span>
+            </NavLink>
+          )}
 
           <NavLink to="/productos" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
             <Package size={20} />
@@ -152,15 +158,19 @@ export const Sidebar = () => {
             <span>Clientes</span>
           </NavLink>
 
-          <NavLink to="/historial" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <History size={20} />
-            <span>Historial</span>
-          </NavLink>
+          {isAdmin && (
+            <>
+              <NavLink to="/historial" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+                <History size={20} />
+                <span>Historial</span>
+              </NavLink>
 
-          <NavLink to="/configuracion" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <Settings size={20} />
-            <span>Configuración</span>
-          </NavLink>
+              <NavLink to="/configuracion" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+                <Settings size={20} />
+                <span>Configuración</span>
+              </NavLink>
+            </>
+          )}
         </nav>
 
         <div className="footer-area">
