@@ -1,10 +1,10 @@
-# 🛒 SmartPOS — Point of Sale & Inventory Management System
+# SmartPOS — Point of Sale & Inventory Management System
 
 A modern, fast, and responsive full-stack **Point of Sale (POS)** and **Inventory Management System** built with **React**, **TypeScript**, **Tailwind CSS**, **PHP**, and **MySQL**. Designed to streamline retail store operations, manage product stock in real time, handle cash flow, and generate printable thermal receipts.
 
 ---
 
-## 🌟 Table of Contents
+## Table of Contents
 - [Project Overview](#-project-overview)
 - [Key Features](#-key-features)
 - [Tech Stack](#-tech-stack)
@@ -22,7 +22,7 @@ A modern, fast, and responsive full-stack **Point of Sale (POS)** and **Inventor
 
 ---
 
-## 📖 Project Overview
+## Project Overview
 
 **SmartPOS** is an end-to-end POS solution tailored for small-to-medium retail stores, convenience shops, and supermarkets. It bridges a modern single-page frontend with an efficient, lightweight PHP REST API.
 
@@ -30,48 +30,48 @@ The system empowers cashiers with a seamless checkout experience (interactive pr
 
 ---
 
-## ✨ Key Features
+##  Key Features
 
-### 🛒 1. Point of Sale (POS) Terminal
+###  1. Point of Sale (POS) Terminal
 - **Fast Cashier Workflow:** Visual product catalog with category filter tabs and real-time text/barcode search.
 - **Dynamic Cart:** Instant quantity increment/decrement, subtotal calculation, and item removal.
 - **Payment & Change Calculation:** Cash payment inputs with real-time change calculation and payment method selection.
 - **Thermal Receipt Printing:** Instant 80mm/58mm receipt preview and direct browser printing with automated formatting.
 - **Keyboard Shortcuts:** Keyboard-friendly checkout (press `Enter` to dismiss or finalize).
 
-### 📦 2. Real-Time Inventory & Product Catalog
+###  2. Real-Time Inventory & Product Catalog
 - **Product Management:** Create, view, and edit products with barcode, purchase price, retail price, and stock levels.
 - **Image Upload & Support:** Local image uploading with automatic file storage (`/uploads/productos`) and remote URL preview.
 - **Stock Depletion:** Automatic stock decrement upon successful checkout wrapped in atomic database transactions.
 - **Low Stock Alerts:** Color-coded badges and dedicated low-stock filters to prevent stockouts.
 
-### 📊 3. Analytics & Dashboard
+###  3. Analytics & Dashboard
 - **Sales Overview:** Today's gross sales revenue calculation.
 - **Stock Health:** Real-time count of active products and items reaching the reorder point (low stock).
 - **Quick Navigation:** Jump straight from metric cards to relevant modules.
 
-### 🧾 4. Sales History & Receipt Re-printing
+###  4. Sales History & Receipt Re-printing
 - **Audit Log:** Chronological record of completed transactions showing cashier name, timestamp, and grand total.
 - **Order Breakdown:** View individual line items, unit prices, and quantities for past sales.
 - **Ticket Re-printing:** One-click re-generation of thermal receipts for previous orders.
 
-### 👥 5. Customer Relationship Management (CRM)
+###  5. Customer Relationship Management (CRM)
 - **Customer Directory:** Register customer profiles with document ID, phone, address, and email.
 - **Quick Lookup & Update:** Full CRUD capabilities with responsive modals.
 
-### ⚙️ 6. Business Settings & Customization
+###  6. Business Settings & Customization
 - **Store Profile:** Configure business name, tax identification (RUC/NIT/Tax ID), phone number, and physical address.
 - **Localization:** Set default currency symbol (`$`, `€`, `S/`, etc.) and tax rate (VAT/IVA).
 - **Receipt Customization:** Customizable receipt header and footer thank-you message.
 
-### 🔐 7. Authentication & Security
+###  7. Authentication & Security
 - **Secure Access:** Login page with token storage and session validation.
 - **Role-Based Access Control (RBAC):** Schema support for `Admin`, `Cajero` (Cashier), and `Vendedor` (Salesperson) roles.
 - **Database Transactions:** ACID-compliant checkout with rollbacks if stock or order insertion encounters an issue.
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 ### Frontend
 - **Framework:** [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
@@ -92,7 +92,7 @@ The system empowers cashiers with a seamless checkout experience (interactive pr
 
 ---
 
-## 🏗️ System Architecture
+##  System Architecture
 
 ```text
 ┌────────────────────────────────────────────────────────┐
@@ -120,7 +120,7 @@ The system empowers cashiers with a seamless checkout experience (interactive pr
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```text
 Sistema_Pos/
@@ -166,7 +166,7 @@ Sistema_Pos/
 
 ---
 
-## 🗄️ Database Overview
+##  Database Overview
 
 The system includes a relational MySQL schema (`sistema_pos`) with foreign key constraints:
 
@@ -183,7 +183,7 @@ The system includes a relational MySQL schema (`sistema_pos`) with foreign key c
 
 ---
 
-## 🚀 Getting Started & Installation
+##  Getting Started & Installation
 
 ### 1. Prerequisites
 Ensure you have the following installed on your machine:
@@ -245,7 +245,7 @@ Ensure you have the following installed on your machine:
 
 ---
 
-## 🔑 Default Login Credentials
+##  Default Login Credentials
 
 Use the preconfigured administrator credentials from the database seed:
 
@@ -255,7 +255,7 @@ Use the preconfigured administrator credentials from the database seed:
 
 ---
 
-## 📡 API Reference
+##  API Reference
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -276,7 +276,7 @@ Use the preconfigured administrator credentials from the database seed:
 
 ---
 
-## 📄 License
+##  License
 
 This project is open-source and available under the [MIT License](LICENSE). Feel free to use, modify, and distribute it for personal, academic, or commercial projects.
 
